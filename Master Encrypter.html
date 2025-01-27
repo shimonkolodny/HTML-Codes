@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Custom Encryption and Decryption</title>
+    <meta charset="UTF-8">
+    <script type="text/javascript">
+        const mapping1 = {
+            "A":0, "B":1, "C":2, "D":3, "E":4, "F":5, "G":6, "H":7, "I":8, "J":9, "K":10, "L":11, "M":12, "N":13, "O":14, "P":15, "Q":16, "R":17, "S":18, "T":19, "U":20, "V":21, "W":22, "X":23, "Y":24, "Z":25, "a":26, "b":27, "c":28, "d":29, "e":30, "f":31, "g":32, "h":33, "i":34, "j":35, "k":36, "l":37, "m":38, "n":39, "o":40, "p":41, "q":42, "r":43, "s":44, "t":45, "u":46, "v":47, "w":48, "x":49, "y":50, "z":51, "1":52, "2":53, "3":54, "4":55, "5":56, "6":57, "7":58, "8":59, "9":60, "0":61, "~":62, "!":63, "@":64, "#":65, "$":66, "%":67, "^":68, "&":69, "*":70, "(":71, ")":72, "[":73, "]":74, "\\":75, ";":76, "'":77, ",":78, ".":79, "/":80, "{":81, "}":82, "|":83, ":":84, "\"":85, "<":86, ">":87, "?":88, " ":89, "-":90, "_":91, "+":92, "=":93
+        };
+
+        function to20BitBinary(key) {
+            return Array.from(key)
+                .map(char => char.charCodeAt(0).toString(2).padStart(8, '0'))
+                .join('')
+                .slice(0, 20);
+        }
+
+        function encrypt() {
+            const key = document.getElementById("encryptionKey").value;
+            const binaryKey = to20BitBinary(key);
+            console.log(`Binary key: ${binaryKey}`);
+
+            const inputText = document.getElementById("inputText").value;
+            const outputText = [...inputText].map(char => {
+                const code = char.charCodeAt(0);
+                return String.fromCharCode(code ^ parseInt(binaryKey, 2)); // Example XOR encryption
+            }).join('');
+
+            document.getElementById("outputText").value = outputText;
+        }
+
+        function decrypt() {
+            const key = document.getElementById("encryptionKey").value;
+            const binaryKey = to20BitBinary(key);
+
+            const inputText = document.getElementById("inputText").value;
+            const outputText = [...inputText].map(char => {
+                const code = char.charCodeAt(0);
+                return String.fromCharCode(code ^ parseInt(binaryKey, 2)); // Example XOR decryption
+            }).join('');
+
+            document.getElementById("outputText").value = outputText;
+        }
+
+        function moveOutputToInput() {
+            const outputText = document.getElementById("outputText").value;
+            document.getElementById("inputText").value = outputText;
+        }
+    </script>
+</head>
+<body>
+    <h1>Custom Encryption and Decryption</h1>
+    <textarea id="inputText" rows="10" cols="50" placeholder="Enter text to encrypt/decrypt"></textarea><br><br>
+    <label>Encryption Key:</label>
+    <input type="text" id="encryptionKey" placeholder="Enter key"><br><br>
+    <button onclick="encrypt()">Encrypt</button>
+    <button onclick="decrypt()">Decrypt</button><br><br>
+    <button onclick="moveOutputToInput()">Move Output to Input</button><br><br>
+    <textarea id="outputText" rows="10" cols="50" placeholder="Output will appear here"></textarea>
+</body>
+</html>

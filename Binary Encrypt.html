@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Code Encrypt/Decrypt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            padding: 20px;
+        }
+        #output {
+            margin-top: 15px;
+            white-space: pre-wrap; /* Ensures output is readable in Chrome and Firefox */
+        }
+        textarea, button, input, select {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Multi-Code Encryption and Decryption</h2>
+    <label for="operation">Select Operation: </label>
+    <select id="operation" onchange="toggleInputs()">
+        <option value="encrypt">Encrypt</option>
+        <option value="decrypt">Decrypt</option>
+    </select><br><br>
+
+    <div id="encrypt-section">
+        <label for="encryptText">Enter Text to Encrypt:</label><br>
+        <textarea id="encryptText" rows="5" cols="50" placeholder="Enter text to encrypt..."></textarea><br>
+        <label for="encryptionType">Select Encryption Type: </label>
+        <select id="encryptionType">
+            <option value="binary">Binary</option>
+            <option value="dotSpace">Dot and Space Code</option>
+            <option value="emoji">Emoji Code</option>
+            <option value="customDotSpace">Custom Dot-Space Code</option>
+        </select><br>
+        <button onclick="encryptText()">Encrypt</button>
+        <p id="encryptOutput"></p>
+    </div>
+
+    <div id="decrypt-section" style="display: none;">
+        <label for="decryptText">Enter Code to Decrypt:</label><br>
+        <textarea id="decryptText" rows="5" cols="50" placeholder="Enter encoded data..."></textarea><br>
+        <button onclick="decryptText()">Decrypt</button>
+        <p id="decryptOutput"></p>
+    </div>
+
+    <script>
+        function toggleInputs() {
+            const operation = document.getElementById("operation").value;
+            if (operation === "encrypt") {
+                document.getElementById("encrypt-section").style.display = "block";
+                document.getElementById("decrypt-section").style.display = "none";
+            } else {
+                document.getElementById("encrypt-section").style.display = "none";
+                document.getElementById("decrypt-section").style.display = "block";
+            }
+        }
+
+        function textToBinary(text) {
+            return text.split('').map(char => {
+                return char.charCodeAt(0).toString(2).padStart(8, '0');
+            }).join(' ');
+        }
+
+        function textToDotSpace(text) {
+            return textToBinary(text).replace(/1/g, '.').replace(/0/g, ' ');
+        }
+
+        function textToEmoji(text) {
+            const emojiMap = {
+                'A': '🍎', 'B': '🐝', 'C': '🛶', 'D': '🐬',
+                'E': '🦅', 'F': '🏵️', 'G': '🎻', 'H': '🏠',
+                'I': '🧊', 'J': '🤹', 'K': '🔪', 'L': '🦁',
+                'M': '🌝', 'N': '🎶', 'O': '🐙', 'P': '🅿️',
+                'Q': '👑', 'R': '🌈', 'S': '🐍', 'T': '🌴',
+                'U': '☂️', 'V': '🎯', 'W': '🌊', 'X': '❌',
+                'Y': '🛳️', 'Z': '⚡',
+                '0': '🥚', '1': '🥇', '2': '✌️', '3': '🎄',
+                '4': '🍀', '5': '🖐️', '6': '🎱', '7': '🕖',
+                '8': '🕗', '9': '🦉',
+                '!': '❗', '@': '📧', '#': '#️⃣', '$': '💲',
+                '%': '📊', '^': '🎩', '&': '⚓', '*': '✳️',
+                '(': '🌜', ')': '🌛', '-': '➖', '_': '🛏️',
+                '+': '➕', '=': '🟰', '~': '♨️', '[': '🔲',
+                ']': '🔳', '{': '📂', '}': '📁', '|': '🚪',
+                '\\': '🛤️', ';': '🎗️', ''': '🐦', ':': '⏰',
+                '"': '💬', ',': '🌧️', '.': '⚫', '/': '🛣️',
+                '<': '👈', '>': '👉', '?': '🤔', ' ': '🌌'
+            };
+            return text.split('').map(char => emojiMap[char.toUpperCase()] || char).join('');
+        }
+
+        function textToCustomDotSpace(text) {
+            const customDotSpaceMap = {
+                'A': '. .', 'B': '. .', 'C': '. . .', 'D': '. .',
+                'E': '. . .', 'F': '. . .', 'G': '. . . .', 'H': '. .',
+                'I': '. . .', 'J': '. . .', 'K': '. . . .', 'L': '. . .',
+                'M': '. . . .', 'N': '. . . .', 'O': '. . . . .',
+                'P': '. .', 'Q': '. . .', 'R': '. . .', 'S': '. . . .',
+                'T': '. . .', 'U': '. . . .', 'V': '. . . .',
+                'W': '. . . . .', 'X': '. . .', 'Y': '. . . .', 'Z': '. . . .',
+                '0': '. .', '1': '. . .', '2': '. . .', '3': '. . . .',
+                '4': '. . .', '5': '. . . .', '6': '. . . .', '7': '. . . . .',
+                '8': '. . .', '9': '. . . .',
+                '!': '. .', '@': '.', '#': '. . .', '$': '. .',
+                '%': '. . .', '^': '. . . . .', '&': '. . .', '*': '. . . .',
+                '(': '. .', ')': '. . .', '-': '. . . .', '_': '. . . . . .',
+                '+': '. . . .', '=': '. . . . .', '~': '. . . . . .',
+                '[': '. . . . .', ']': '. . . . .', '{': '. . . . . .',
+                '}': '. . . . . .', '|': '. . . .', '\\': '. . .',
+                ';': '. . . . .', ''': '. . .', ':': '. . . .',
+                '"': '. .', ',': '. . .', '.': '. . . .', '/': '. . . . .',
+                '<': '. . .', '>': '. . . .', '?': '. . . . . .'
+            };
+            return text.split('').map(char => customDotSpaceMap[char.toUpperCase()] || char).join(' ');
+        }
+
+        function encryptText() {
+            const text = document.getElementById("encryptText").value;
+            const encryptionType = document.getElementById("encryptionType").value;
+            let result = "";
+
+            if (text.trim() === "") {
+                document.getElementById("encryptOutput").innerText = "Please enter some text to encrypt.";
+                return;
+            }
+
+            switch (encryptionType) {
+                case "binary":
+                    result = textToBinary(text);
+                    break;
+                case "dotSpace":
+                    result = textToDotSpace(text);
+                    break;
+                case "emoji":
+                    result = textToEmoji(text);
+                    break;
+                case "customDotSpace":
+                    result = textToCustomDotSpace(text);
+                    break;
+                default:
+                    result = "Unknown encryption type.";
+            }
+
+            document.getElementById("encryptOutput").innerText = "Encrypted Text: " + result;
+        }
+
+        function detectAndDecrypt(text) {
+            if (/^[01\s]+$/.test(text)) {
+                return binaryToText(text);
+            } else if (/^[.\s]+$/.test(text)) {
+                return binaryToText(text.replace(/\./g, '1').replace(/ /g, '0'));
+            } else if (/^[🍎🐝🛶🐬🦅🏵️🎻🏠🧊🤹🔪🦁🌝🎶🐙🅿️👑🌈🐍🌴☂️🎯🌊❌🛳️⚡🥚🥇✌️🎄🍀🖐️🎱🕖🕗🦉❗📧#️⃣💲📊🎩⚓✳️🌜🌛➖🛏️➕🟰♨️🔲🔳📂📁🚪🛤️🎗️🐦⏰💬🌧️⚫🛣️👈👉🤔🌌]+$/.test(text)) {
+                return emojiToText(text);
+            } else {
+                return "Unknown format or unsupported code.";
+            }
+        }
+
+        function binaryToText(binary) {
+            return binary.trim().split(/\s+/).map(bin => {
+                if (!/^[01]{8}$/.test(bin)) {
+                    throw new Error("Invalid binary format");
+                }
+                return String.fromCharCode(parseInt(bin, 2));
+            }).join('');
+        }
+
+        function emojiToText(emojiText) {
+            const emojiMapReverse = {
+                '🍎': 'A', '🐝': 'B', '🛶': 'C', '🐬': 'D',
+                '🦅': 'E', '🏵️': 'F', '🎻': 'G', '🏠': 'H',
+                '🧊': 'I', '🤹': 'J', '🔪': 'K', '🦁': 'L',
+                '🌝': 'M', '🎶': 'N', '🐙': 'O', '🅿️': 'P',
+                '👑': 'Q', '🌈': 'R', '🐍': 'S', '🌴': 'T',
+                '☂️': 'U', '🎯': 'V', '🌊': 'W', '❌': 'X',
+                '🛳️': 'Y', '⚡': 'Z',
+                '🥚': '0', '🥇': '1', '✌️': '2', '🎄': '3',
+                '🍀': '4', '🖐️': '5', '🎱': '6', '🕖': '7',
+                '🕗': '8', '🦉': '9',
+                '❗': '!', '📧': '@', '#️⃣': '#', '💲': '$',
+                '📊': '%', '🎩': '^', '⚓': '&', '✳️': '*',
+                '🌜': '(', '🌛': ')', '➖': '-', '🛏️': '_',
+                '➕': '+', '🟰': '=', '♨️': '~', '🔲': '[',
+                '🔳': ']', '📂': '{', '📁': '}', '🚪': '|',
+                '🛤️': '\\', '🎗️': ';', '🐦': ''', '⏰': ':',
+                '💬': '"', '🌧️': ',', '⚫': '.', '🛣️': '/',
+                '👈': '<', '👉': '>', '🤔': '?', '🌌': ' '
+            };
+            return emojiText.split('').map(emoji => emojiMapReverse[emoji] || emoji).join('');
+        }
+
+        function decryptText() {
+            const text = document.getElementById("decryptText").value;
+            if (text.trim() === "") {
+                document.getElementById("decryptOutput").innerText = "Please enter encoded data to decrypt.";
+                return;
+            }
+            try {
+                const originalText = detectAndDecrypt(text);
+                document.getElementById("decryptOutput").innerText = "Decrypted Text: " + originalText;
+            } catch (error) {
+                document.getElementById("decryptOutput").innerText = "Error: " + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

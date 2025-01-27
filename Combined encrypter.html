@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Encryption/Decryption Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        label, select {
+            font-size: 16px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Encryption/Decryption Tool</h1>
+
+    <textarea id="inputText" rows="6" placeholder="Enter your message here"></textarea><br><br>
+
+    <button id="encryptButton">Encrypt</button>
+    <button id="decryptButton">Decrypt</button>
+    <button id="moveOutputButton">Move Output to Input</button>
+
+    <br><br>
+    <label for="encryptionMethodSelect">Choose Encryption Code:</label>
+    <select id="encryptionMethodSelect">
+        <option value="original">Original</option>
+        <option value="aesgcm">AES-GCM</option>
+    </select>
+    <br><br>
+
+    <textarea id="outputText" rows="6" placeholder="Output will appear here"></textarea>
+
+    <script>
+    // --------------------------------------------------------------------
+    //                       ORIGINAL TOY ENCRYPTION
+    // --------------------------------------------------------------------
+    // Character to Code mapping
+    var charToCode = {
+        'A': 'hhfgsinuvhysvi87h0n8876t5n875n9',
+        'B': 'ukyytciuyni87ynkgvunhgfbktkultnpyb',
+        'C': 'sytgnntsdfuse4g50v9gyvnytgvb\\',
+        'E': 'gbiutbnvu5hnkuoigou5goiun',
+        'F': 'uyvthvnw4iuhnvuknhvkwgjnuh',
+        'G': 'iyierwnirbgyntqvnouiyv',
+        'H': 'jewgfwhh7yfwtjcrhkuiy',
+        'I': 'mjchtgnisugfgbsui5876087t5yttttt',
+        'J': 'uytiucfybgcftuibuv5ieunyinovuh',
+        'K': 'hbviyynukhnhkjhkutynoviurhmlt',
+        'L': 'jfgbaciurtvtnvoiueboybto',
+        'M': 'hytybcurytbvyngrguvn',
+        'N': 'kurtbviueiytgbrjvury',
+        'O': 'jyhythfi7tghis',
+        'P': 'tfuygtbyhcjcghj',
+        'Q': 'rkjjhtcinuyhn',
+        'R': 'ejtyfnu4vnthk',
+        'S': 'djyrhtvnuhydgnv',
+        'T': 'ktbvnhhnid',
+        'U': 'uyytvbnutg',
+        'V': 'vesmhyhrucyengeujbncuygfh',
+        'W': 'hhvbbuytgbnvu',
+        'X': 'whtgbucybujn',
+        'Y': 'vtvrmmyhtcng',
+        'Z': 'tzbgczufyvby',
+        'a': 'ic64tbcubnc',
+        'b': 'jhjhythfcyf5huyhvtnuvkd',
+        'c': 'tukyyhrc8g7hyih',
+        'd': 'oo47y6tgcyrgni',
+        'e': 'esuiyyftbv8oenrfhc',
+        'f': 'jytegbnbb8yw',
+        'g': '87456804756',
+        'h': 'riuygruytbv',
+        'i': 'kuuytbov8e7yfnic',
+        'j': 'khnrgynvli8fthnivuryng',
+        'k': 'girvtfguycbgcuybgrugytnv',
+        'l': 'ofuuyrnvaiginugnpih',
+        'm': 'giyygbgiumaoigan',
+        'n': ';ojojgnyavauertrbkc',
+        'o': 'ihewfytbciyrtfb',
+        'p': 'efyciweuybtvuignlib',
+        'q': 'dgbevlityvlirithvluyh',
+        'r': 'lryfgnveqruihtbornm',
+        's': 'r;jytv78r7yhtnvo',
+        't': 'olr8uyjvgytnbiuyog',
+        'u': 'rkluitvbiurytbuonv',
+        'v': 'r;oiyntbuirhnktibn',
+        'w': ';kkuvtnoirueytnuy',
+        'x': 'ituniynvkj,;toj7i',
+        'y': ';tjuuybnutynrlvi',
+        'z': 'rlkkvyaniumhc',
+        'Code is exposed, use other method!': '1118451040299'
+    };
+
+    // Build reverse mapping
+    var codeToChar = {};
+    for (var key in charToCode) {
+        codeToChar[charToCode[key]] = key;
+    }
+
+    // Trie Node constructor
+    function TrieNode() {
+        this.children = {};
+        this.isEndOfCode = false;
+        this.char = null;
+    }
+
+    // Root of the Trie
+    var root = new TrieNode();
+
+    // Function to insert code into the Trie
+    function insertCode(code, char) {
+        var node = root;
+        for (var i = 0; i < code.length; i++) {
+            var c = code[i];
+            if (!node.children[c]) {
+                node.children[c] = new TrieNode();
+            }
+            node = node.children[c];
+        }
+        node.isEndOfCode = true;
+        node.char = char;
+    }
+
+    // Build the Trie
+    for (var code in codeToChar) {
+        insertCode(code, codeToChar[code]);
+    }
+
+    // Decrypt function (Original)
+    function decrypt(text) {
+        var result = '';
+        var index = 0;
+        while (index < text.length) {
+            var node = root;
+            var matchedChar = null;
+            var lastMatchIndex = index;
+            for (var i = index; i < text.length; i++) {
+                var c = text[i];
+                if (node.children[c]) {
+                    node = node.children[c];
+                    if (node.isEndOfCode) {
+                        matchedChar = node.char;
+                        lastMatchIndex = i;
+                    }
+                } else {
+                    break;
+                }
+            }
+            if (matchedChar) {
+                result += matchedChar;
+                index = lastMatchIndex + 1;
+            } else {
+                result += text[index];
+                index += 1;
+            }
+        }
+        return result;
+    }
+
+    // Encrypt function (Original)
+    function encryptOriginal(text) {
+        var result = '';
+        var words = text.split(/(\s+)/); // Keep spaces separate
+        for (var i = 0; i < words.length; i++) {
+            var word = words[i];
+            if (charToCode[word]) {
+                result += charToCode[word];
+            } else {
+                for (var j = 0; j < word.length; j++) {
+                    var char = word[j];
+                    if (charToCode[char]) {
+                        result += charToCode[char];
+                    } else {
+                        result += char;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+    // --------------------------------------------------------------------
+
+
+    // --------------------------------------------------------------------
+    //                         AES-GCM ENCRYPTION
+    // --------------------------------------------------------------------
+    let aesKey = null;
+
+    function generateIv() {
+        return window.crypto.getRandomValues(new Uint8Array(12));
+    }
+
+    function arrayBufferToBase64(buffer) {
+        let binary = '';
+        let bytes = new Uint8Array(buffer);
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
+
+    function base64ToArrayBuffer(base64) {
+        let binary = atob(base64);
+        let length = binary.length;
+        let bytes = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
+
+    async function getAesKey() {
+        if (!aesKey) {
+            aesKey = await window.crypto.subtle.generateKey(
+                { name: "AES-GCM", length: 256 },
+                true,
+                ["encrypt", "decrypt"]
+            );
+        }
+        return aesKey;
+    }
+
+    async function encryptAesGcm(plaintext) {
+        const key = await getAesKey();
+        const iv = generateIv();
+        const encoded = new TextEncoder().encode(plaintext);
+
+        const ciphertext = await window.crypto.subtle.encrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            encoded
+        );
+
+        const combined = new Uint8Array(iv.byteLength + ciphertext.byteLength);
+        combined.set(iv, 0);
+        combined.set(new Uint8Array(ciphertext), iv.byteLength);
+
+        return arrayBufferToBase64(combined.buffer);
+    }
+
+    async function decryptAesGcm(ciphertextBase64) {
+        const key = await getAesKey();
+        const combinedBuffer = base64ToArrayBuffer(ciphertextBase64);
+        const combinedBytes = new Uint8Array(combinedBuffer);
+
+        const iv = combinedBytes.slice(0, 12);
+        const ct = combinedBytes.slice(12);
+
+        const decrypted = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            ct
+        );
+
+        return new TextDecoder().decode(decrypted);
+    }
+    // --------------------------------------------------------------------
+
+
+    // --------------------------------------------------------------------
+    //                   Event Listeners for Encrypt / Decrypt
+    // --------------------------------------------------------------------
+    document.getElementById('encryptButton').addEventListener('click', async function() {
+        const inputText = document.getElementById('inputText').value;
+        const chosen = document.getElementById('encryptionMethodSelect').value;
+        let outputText = '';
+
+        if (chosen === 'aesgcm') {
+            outputText = await encryptAesGcm(inputText);
+        } else {
+            // "Original"
+            outputText = encryptOriginal(inputText);
+        }
+
+        document.getElementById('outputText').value = outputText;
+    });
+
+    document.getElementById('decryptButton').addEventListener('click', async function() {
+        const inputText = document.getElementById('inputText').value;
+        const chosen = document.getElementById('encryptionMethodSelect').value;
+        let outputText = '';
+
+        if (chosen === 'aesgcm') {
+            try {
+                outputText = await decryptAesGcm(inputText);
+            } catch (e) {
+                outputText = '[Decryption error or invalid ciphertext]';
+            }
+        } else {
+            // "Original"
+            outputText = decrypt(inputText);
+        }
+
+        document.getElementById('outputText').value = outputText;
+    });
+
+    // Move Output to Input
+    document.getElementById('moveOutputButton').addEventListener('click', function() {
+        const currentOutput = document.getElementById('outputText').value;
+        document.getElementById('inputText').value = currentOutput;
+    });
+    // --------------------------------------------------------------------
+    </script>
+</body>
+</html>
