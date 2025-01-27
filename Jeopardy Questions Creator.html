@@ -1,126 +1,519 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jeopardy Question Creator</title>
+  <meta charset="UTF-8" />
+  <title>Jeopardy Questions Builder</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9f9f9; }
-    .container { max-width: 600px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 8px; }
-    h1 { margin-bottom: 0.5em; }
-    label { display: block; margin-top: 10px; }
-    input, select, button { margin-top: 5px; padding: 8px; width: 100%; box-sizing: border-box; }
-    .actions { margin: 20px 0; display: flex; gap: 10px; }
-    .question-item { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-    .delete-btn { background-color: red; color: white; margin-top: 5px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+      color: #333;
+      position: relative;
+    }
+    h1 {
+      text-align: center;
+    }
+    /* Stats bar styling */
+    #stats-bar {
+      max-width: 600px;
+      margin: 10px auto;
+      background: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      font-size: 0.95em;
+      text-align: center;
+    }
+    .question-form {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 20px auto;
+    }
+    .question-form label {
+      display: block;
+      margin: 8px 0 4px;
+    }
+    .question-form input[type="text"],
+    .question-form select,
+    .question-form input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    .question-form .choices {
+      display: none; /* only show if multiple choice is "yes" */
+      margin-bottom: 10px;
+    }
+    .question-form button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      background: #28a745;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .question-form button:hover {
+      background: #218838;
+    }
+    #questions-list {
+      max-width: 600px;
+      margin: 20px auto;
+    }
+    .question-item {
+      background: #fff;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .edit-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ffc107;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .edit-button:hover {
+      background: #e0a800;
+    }
+    .delete-button {
+      background: #dc3545;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+      margin-top: 5px; 
+      display: inline-block; 
+    }
+    .delete-button:hover {
+      background: #c82333;
+    }
+    #button-bar {
+      max-width: 600px;
+      margin: 20px auto;
+      text-align: center;
+    }
+    .action-button {
+      display: inline-block;
+      margin: 5px;
+      padding: 12px 30px;
+      background: #007bff;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+      border: none;
+      font-size: 1em;
+    }
+    .action-button:hover {
+      background: #0069d9;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Jeopardy Question Creator</h1>
-    <div class="actions">
-      <button onclick="importFromGitHub()">Import Questions</button>
-      <button onclick="saveToGitHub()">Save Questions</button>
-      <button onclick="eraseAllQuestions()">Delete All Questions</button>
-    </div>
-    <form onsubmit="addQuestion(event)">
-      <label>Question:</label>
-      <input type="text" id="question" required>
-      <label>Option 1:</label>
-      <input type="text" id="opt1" required>
-      <label>Option 2:</label>
-      <input type="text" id="opt2" required>
-      <label>Option 3:</label>
-      <input type="text" id="opt3" required>
-      <label>Option 4:</label>
-      <input type="text" id="opt4" required>
-      <label>Correct Index (0-3):</label>
-      <input type="number" id="correctIndex" min="0" max="3" required>
-      <label>Value:</label>
-      <input type="number" id="value" min="100" max="500" step="100" required>
-      <button type="submit">Add Question</button>
-    </form>
-    <div id="questions-list"></div>
+  <h1>Jeopardy Questions Builder</h1>
+
+  <!-- File Name Field -->
+  <div style="max-width: 600px; margin: 0 auto 10px auto;">
+    <label for="csv-filename"><strong>CSV File Name (without extension):</strong></label>
+    <input type="text" id="csv-filename" placeholder="e.g. my_jeopardy_file" style="width:100%; padding:8px;"/>
   </div>
-  <script src="script.js"></script>
+
+  <!-- Stats Bar -->
+  <div id="stats-bar">
+    <strong>Questions:</strong> 0 total, 0 multiple choice, 0 non-multiple choice.<br/>
+    <strong>Rounds (5 each value):</strong> 0
+  </div>
+
+  <div class="question-form" id="question-form">
+    <h2 id="form-title">Create a New Question</h2>
+
+    <label for="question-text">Question:</label>
+    <input type="text" id="question-text" placeholder="Enter your question..." required />
+
+    <label for="multiple-choice-select">Multiple Choice?</label>
+    <select id="multiple-choice-select">
+      <option value="yes">Yes</option>
+      <option value="no" selected>No</option>
+    </select>
+
+    <div class="choices" id="choices-container">
+      <label>Choice 1:</label>
+      <input type="text" id="choice1" placeholder="Choice 1" />
+      <label>Choice 2:</label>
+      <input type="text" id="choice2" placeholder="Choice 2" />
+      <label>Choice 3:</label>
+      <input type="text" id="choice3" placeholder="Choice 3" />
+      <label>Choice 4:</label>
+      <input type="text" id="choice4" placeholder="Choice 4" />
+
+      <label for="answer-select">Correct Answer (Which choice is correct?):</label>
+      <select id="answer-select">
+        <option value="Choice1">Choice 1</option>
+        <option value="Choice2">Choice 2</option>
+        <option value="Choice3">Choice 3</option>
+        <option value="Choice4">Choice 4</option>
+      </select>
+    </div>
+
+    <label for="value-select">Value:</label>
+    <select id="value-select">
+      <option value="100">100</option>
+      <option value="200">200</option>
+      <option value="300">300</option>
+      <option value="400">400</option>
+      <option value="500">500</option>
+    </select>
+
+    <label for="bonus-value">Bonus Value (if any):</label>
+    <input type="number" id="bonus-value" placeholder="e.g. 50" value="0" />
+
+    <label for="timer-input">Timer (in seconds, optional):</label>
+    <input type="number" id="timer-input" placeholder="e.g. 20" />
+
+    <!-- Buttons -->
+    <button id="add-question-button">Add Question</button>
+    <button id="update-question-button" style="display: none; background:#17a2b8;">Save Changes</button>
+  </div>
+
+  <div id="questions-list">
+    <!-- List of added questions will appear here -->
+  </div>
+
+  <div id="button-bar">
+    <button class="action-button" id="done-button">Done - Download CSV</button>
+    <button class="action-button" id="delete-all-button">Delete All Questions</button>
+  </div>
+
   <script>
-    let questions = [];
-    let lastDataSha = null;
+    const multipleChoiceSelect = document.getElementById('multiple-choice-select');
+    const choicesContainer = document.getElementById('choices-container');
+    const addQuestionButton = document.getElementById('add-question-button');
+    const updateQuestionButton = document.getElementById('update-question-button');
+    const formTitle = document.getElementById('form-title');
 
-    async function importFromGitHub() {
-      const data = await fetchFromGitHub();
-      if (data) {
-        questions = data.questions || [];
-        saveToLocal();
-        displayQuestions();
-        alert('Imported questions from GitHub.');
+    const questionsList = document.getElementById('questions-list');
+    const doneButton = document.getElementById('done-button');
+    const deleteAllButton = document.getElementById('delete-all-button');
+    const statsBar = document.getElementById('stats-bar');
+    const csvFilenameInput = document.getElementById('csv-filename');
+
+    let questions = []; // store question objects
+    let editingIndex = null; // index of the question we are editing (if any)
+
+    // On load, try to load from localStorage
+    window.addEventListener('load', () => {
+      const saved = localStorage.getItem('jeopardyQuestions');
+      if(saved) {
+        try {
+          questions = JSON.parse(saved);
+        } catch(e) {
+          console.error("Failed to parse saved questions.", e);
+          questions = [];
+        }
       }
-    }
+      rebuildUI();
+      updateStats();
+    });
 
-    function addQuestion(event) {
-      event.preventDefault();
-      const newQuestion = {
-        question: document.getElementById('question').value,
-        options: [
-          document.getElementById('opt1').value,
-          document.getElementById('opt2').value,
-          document.getElementById('opt3').value,
-          document.getElementById('opt4').value,
-        ],
-        correctIndex: parseInt(document.getElementById('correctIndex').value),
-        value: parseInt(document.getElementById('value').value)
-      };
-      questions.push(newQuestion);
-      saveToLocal();
-      displayQuestions();
-    }
-
-    function displayQuestions() {
-      const container = document.getElementById('questions-list');
-      container.innerHTML = '';
-      questions.forEach((q, i) => {
-        const div = document.createElement('div');
-        div.classList.add('question-item');
-        div.innerHTML = `<strong>${q.question}</strong><br>Value: ${q.value}`;
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerText = 'Delete';
-        deleteBtn.classList.add('delete-btn');
-        deleteBtn.onclick = () => deleteQuestion(i);
-        div.appendChild(deleteBtn);
-        container.appendChild(div);
-      });
-    }
-
-    function deleteQuestion(index) {
-      questions.splice(index, 1);
-      saveToLocal();
-      displayQuestions();
-    }
-
-    function eraseAllQuestions() {
-      if (confirm('Are you sure you want to delete all questions?')) {
-        questions = [];
-        saveToLocal();
-        displayQuestions();
-      }
-    }
-
-    async function saveToGitHub() {
-      await updateGitHubData({ questions });
-      alert('Questions saved to GitHub.');
-    }
-
-    function saveToLocal() {
+    function saveToLocalStorage() {
       localStorage.setItem('jeopardyQuestions', JSON.stringify(questions));
     }
 
-    function loadFromLocal() {
-      const data = localStorage.getItem('jeopardyQuestions');
-      if (data) questions = JSON.parse(data);
-      displayQuestions();
+    function rebuildUI() {
+      // Clear existing
+      questionsList.innerHTML='';
+      // Rebuild
+      questions.forEach((q, i) => {
+        const div = document.createElement('div');
+        div.classList.add('question-item');
+        const isMC = (q.multipleChoice==='yes');
+        div.innerHTML = `
+          <strong>Question:</strong> ${q.question}<br/>
+          <strong>Multiple Choice:</strong> ${isMC?'Yes':'No'}<br/>
+          ${isMC?`
+          <strong>Choice1:</strong> ${q.choice1}<br/>
+          <strong>Choice2:</strong> ${q.choice2}<br/>
+          <strong>Choice3:</strong> ${q.choice3}<br/>
+          <strong>Choice4:</strong> ${q.choice4}<br/>
+          <strong>Correct Answer:</strong> ${q.answer}<br/>
+          `:''}
+          <strong>Value:</strong> ${q.value}, 
+          <strong>Bonus:</strong> ${q.bonusValue}, 
+          <strong>Timer:</strong> ${q.timer? q.timer+' sec':'N/A'}<br/>
+          <button class="edit-button" data-index="${i}">Edit</button>
+          <button class="delete-button" data-index="${i}">Delete</button>
+        `;
+        questionsList.appendChild(div);
+      });
+
+      // Hook up edit buttons
+      const editButtons = document.querySelectorAll('.edit-button');
+      editButtons.forEach(btn => {
+        btn.addEventListener('click', (event) => {
+          const idx = parseInt(btn.getAttribute('data-index'), 10);
+          startEditing(idx);
+        });
+      });
+
+      // Hook up delete buttons
+      const deleteButtons = document.querySelectorAll('.delete-button');
+      deleteButtons.forEach(btn => {
+        btn.addEventListener('click', (event) => {
+          const idx = parseInt(btn.getAttribute('data-index'), 10);
+          deleteQuestion(idx);
+        });
+      });
     }
 
-    window.onload = loadFromLocal;
+    function updateStats() {
+      const total = questions.length;
+      const mcCount = questions.filter(q => q.multipleChoice==='yes').length;
+      const nonMcCount = total - mcCount;
+
+      // Count how many questions for each value
+      let count100 = questions.filter(q => q.value === '100').length;
+      let count200 = questions.filter(q => q.value === '200').length;
+      let count300 = questions.filter(q => q.value === '300').length;
+      let count400 = questions.filter(q => q.value === '400').length;
+      let count500 = questions.filter(q => q.value === '500').length;
+
+      // The number of complete rounds is the minimum of these five counts
+      const rounds = Math.min(count100, count200, count300, count400, count500);
+
+      statsBar.innerHTML = `
+        <strong>Questions:</strong> ${total} total, ${mcCount} multiple choice, ${nonMcCount} non-multiple choice.<br/>
+        <strong>Rounds (5 each value):</strong> ${rounds}
+      `;
+    }
+
+    // Toggle display of multiple choice fields
+    multipleChoiceSelect.addEventListener('change', () => {
+      if (multipleChoiceSelect.value === 'yes') {
+        choicesContainer.style.display = 'block';
+      } else {
+        choicesContainer.style.display = 'none';
+      }
+    });
+
+    function clearFormAndReset() {
+      document.getElementById('question-text').value = '';
+      document.getElementById('choice1').value = '';
+      document.getElementById('choice2').value = '';
+      document.getElementById('choice3').value = '';
+      document.getElementById('choice4').value = '';
+      document.getElementById('answer-select').value = 'Choice1';
+      document.getElementById('value-select').value = '100';
+      document.getElementById('bonus-value').value = '0';
+      document.getElementById('timer-input').value = '';
+      multipleChoiceSelect.value = 'no';
+      choicesContainer.style.display = 'none';
+
+      editingIndex = null;
+      addQuestionButton.style.display='inline-block';
+      updateQuestionButton.style.display='none';
+      formTitle.innerText='Create a New Question';
+    }
+
+    addQuestionButton.addEventListener('click', (event) => {
+      event.preventDefault();
+
+      const questionText = document.getElementById('question-text').value.trim();
+      const isMultipleChoice = (multipleChoiceSelect.value === 'yes');
+      const choice1 = document.getElementById('choice1').value.trim();
+      const choice2 = document.getElementById('choice2').value.trim();
+      const choice3 = document.getElementById('choice3').value.trim();
+      const choice4 = document.getElementById('choice4').value.trim();
+      const answer = document.getElementById('answer-select').value;
+      const value = document.getElementById('value-select').value;
+      const bonusValue = document.getElementById('bonus-value').value || 0;
+      const timer = document.getElementById('timer-input').value || '';
+
+      if (!questionText) {
+        alert('Please enter a question text!');
+        return;
+      }
+
+      if (isMultipleChoice) {
+        if (!choice1 && !choice2 && !choice3 && !choice4) {
+          alert('Please fill in at least one choice if multiple choice is "Yes".');
+          return;
+        }
+      }
+
+      const questionObj = {
+        question: questionText,
+        choice1: isMultipleChoice ? choice1 : '',
+        choice2: isMultipleChoice ? choice2 : '',
+        choice3: isMultipleChoice ? choice3 : '',
+        choice4: isMultipleChoice ? choice4 : '',
+        answer: isMultipleChoice ? answer : '', 
+        value: value,
+        bonusValue: bonusValue,
+        timer: timer,
+        multipleChoice: isMultipleChoice ? 'yes' : 'no'
+      };
+
+      questions.push(questionObj);
+
+      rebuildUI();
+      updateStats();
+      saveToLocalStorage();
+
+      clearFormAndReset();
+      alert('Question added!');
+    });
+
+    // Start editing an existing question
+    function startEditing(index) {
+      editingIndex = index;
+      const q = questions[index];
+
+      document.getElementById('question-text').value = q.question;
+      document.getElementById('choice1').value = q.choice1;
+      document.getElementById('choice2').value = q.choice2;
+      document.getElementById('choice3').value = q.choice3;
+      document.getElementById('choice4').value = q.choice4;
+      document.getElementById('answer-select').value = q.answer;
+      document.getElementById('value-select').value = q.value;
+      document.getElementById('bonus-value').value = q.bonusValue;
+      document.getElementById('timer-input').value = q.timer;
+      multipleChoiceSelect.value = q.multipleChoice==='yes'?'yes':'no';
+      choicesContainer.style.display = (q.multipleChoice==='yes')?'block':'none';
+
+      addQuestionButton.style.display='none';
+      updateQuestionButton.style.display='inline-block';
+      formTitle.innerText='Edit Question';
+    }
+
+    updateQuestionButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (editingIndex===null) {
+        alert('No question is being edited right now.');
+        return;
+      }
+
+      const questionText = document.getElementById('question-text').value.trim();
+      const isMultipleChoice = (multipleChoiceSelect.value === 'yes');
+      const choice1 = document.getElementById('choice1').value.trim();
+      const choice2 = document.getElementById('choice2').value.trim();
+      const choice3 = document.getElementById('choice3').value.trim();
+      const choice4 = document.getElementById('choice4').value.trim();
+      const answer = document.getElementById('answer-select').value;
+      const value = document.getElementById('value-select').value;
+      const bonusValue = document.getElementById('bonus-value').value || 0;
+      const timer = document.getElementById('timer-input').value || '';
+
+      if (!questionText) {
+        alert('Please enter a question text!');
+        return;
+      }
+
+      if (isMultipleChoice) {
+        if (!choice1 && !choice2 && !choice3 && !choice4) {
+          alert('Please fill in at least one choice if multiple choice is "Yes".');
+          return;
+        }
+      }
+
+      // Update
+      questions[editingIndex] = {
+        question: questionText,
+        choice1: isMultipleChoice ? choice1 : '',
+        choice2: isMultipleChoice ? choice2 : '',
+        choice3: isMultipleChoice ? choice3 : '',
+        choice4: isMultipleChoice ? choice4 : '',
+        answer: isMultipleChoice ? answer : '',
+        value: value,
+        bonusValue: bonusValue,
+        timer: timer,
+        multipleChoice: isMultipleChoice ? 'yes' : 'no'
+      };
+
+      rebuildUI();
+      updateStats();
+      saveToLocalStorage();
+
+      clearFormAndReset();
+      alert('Question updated!');
+    });
+
+    function deleteQuestion(index) {
+      if(!confirm("Are you sure you want to delete this question?")) return;
+      questions.splice(index,1);
+      rebuildUI();
+      updateStats();
+      saveToLocalStorage();
+      clearFormAndReset();
+      alert('Question deleted!');
+    }
+
+    // Done Button for CSV
+    doneButton.addEventListener('click', () => {
+      if (!questions.length) {
+        alert('No questions to download! Please add at least one question.');
+        return;
+      }
+
+      // If file name is empty, default:
+      let filename = csvFilenameInput.value.trim() || 'jeopardy_questions';
+
+      // Build CSV in UTF-8 with BOM
+      // The columns are capitalized on the first letter:
+      // Question,Choice1,Choice2,Choice3,Choice4,Answer,Value,BonusValue,Timer,MultipleChoice
+      let csvContent = '\ufeffQuestion,Choice1,Choice2,Choice3,Choice4,Answer,Value,BonusValue,Timer,MultipleChoice\n';
+
+      questions.forEach(q => {
+        const line = [
+          `"${q.question.replace(/"/g,'""')}"`,
+          `"${q.choice1.replace(/"/g,'""')}"`,
+          `"${q.choice2.replace(/"/g,'""')}"`,
+          `"${q.choice3.replace(/"/g,'""')}"`,
+          `"${q.choice4.replace(/"/g,'""')}"`,
+          `"${q.answer}"`,
+          `${q.value}`,
+          `${q.bonusValue}`,
+          `${q.timer}`,
+          `${q.multipleChoice}`
+        ].join(',');
+        csvContent += line + '\n';
+      });
+
+      const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename + '.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    // Delete All
+    deleteAllButton.addEventListener('click', () => {
+      if (!questions.length) {
+        alert('No questions to delete.');
+        return;
+      }
+      if (!confirm("Are you sure you want to delete all questions?")) return;
+      questions = [];
+      rebuildUI();
+      updateStats();
+      saveToLocalStorage();
+      clearFormAndReset();
+      alert('All questions deleted!');
+    });
   </script>
 </body>
 </html>
